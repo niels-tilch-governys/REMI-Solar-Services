@@ -1,0 +1,67 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Email #{{ e.id }}{% endblock %}
+{% block heading %}{{ e.subject }}{% endblock %}
+{% block subheading %}From {{ e.sender_email }} · received {{ e.received_at }}{% endblock %}
+{% block content %}
+<a href="{{ request.referrer or url_for('home') }}" class="inline-flex items-center gap-1 text-sm text-panel font-medium">
+  <i data-lucide="arrow-left" class="w-4 h-4"></i> Back</a>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- body -->
+  <section class="lg:col-span-2 space-y-6">
+    <div class="bg-card border border-line rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        {{ m.status_badge(e.status) }}
+        {% if e.has_attachments %}<span class="badge bg-slate-100 text-muted flex items-center gap-1"><i data-lucide="paperclip" class="w-3 h-3"></i>attachment</span>{% endif %}
+      </div>
+      <div class="prose prose-sm max-w-none text-ink whitespace-pre-line leading-relaxed">{{ e.body }}</div>
+    </div>
+
+    {% if atts %}
+    <div class="bg-card border border-line rounded-xl p-6">
+      <h2 class="font-display font-semibold text-[15px] mb-3">Attachments</h2>
+      <div class="space-y-2">
+        {% for a in atts %}
+        <div class="flex items-center gap-3 text-sm border border-line rounded-lg px-3 py-2">
+          <i data-lucide="file-text" class="w-4 h-4 text-muted"></i>
+          <span class="font-medium">{{ a.filename or 'document' }}</span>
+          <span class="badge bg-slate-100 text-muted">{{ a.file_type }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- AI panel -->
+  <section class="space-y-6">
+    <div class="bg-card border border-line rounded-xl p-5">
+      <h2 class="font-display font-semibold text-[15px] mb-4">AI analysis</h2>
+      {% if analysis %}
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between items-center"><dt class="text-muted">Category</dt><dd>{{ m.category_badge(analysis.category) }}</dd></div>
+        <div class="flex justify-between items-center"><dt class="text-muted">Request type</dt><dd class="font-medium">{{ analysis.request_type or '—' }}</dd></div>
+        <div class="flex justify-between items-center"><dt class="text-muted">Priority</dt><dd>{{ m.priority_badge(analysis.priority) }}</dd></div>
+        <div class="flex justify-between items-center"><dt class="text-muted">Confidence</dt><dd>{{ m.confidence(analysis.confidence) }}</dd></div>
+        <div class="flex justify-between items-center"><dt class="text-muted">Model</dt><dd class="font-mono text-[12px]">{{ analysis.model_version }}</dd></div>
+      </dl>
+      {% if analysis.summary %}<p class="mt-4 pt-4 border-t border-line text-sm text-muted">{{ analysis.summary }}</p>{% endif %}
+      {% else %}<p class="text-muted text-sm">Not yet analysed.</p>{% endif %}
+    </div>
+
+    {% if fields %}
+    <div class="bg-card border border-line rounded-xl p-5">
+      <h2 class="font-display font-semibold text-[15px] mb-3">Extracted data</h2>
+      <dl class="space-y-2 text-sm">
+        {% for f in fields %}
+        <div class="flex justify-between gap-3"><dt class="text-muted">{{ f.field_name.replace('_',' ') }}</dt>
+          <dd class="font-medium text-right">{{ f.field_value }}</dd></div>
+        {% endfor %}
+      </dl>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

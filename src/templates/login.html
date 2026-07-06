@@ -1,0 +1,82 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in · REMI Solar Services</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { ink:'#0E1424', inksoft:'#1A2236', inkline:'#26304a', sun:'#F5A524', sunsoft:'#FDE6BD', panel:'#2563EB', line:'#E7E9EE', danger:'#EF4444', muted:'#6B7280' },
+  fontFamily: { display:['"Space Grotesk"','sans-serif'], sans:['Inter','sans-serif'], mono:['"IBM Plex Mono"','monospace'] }
+}}}
+</script>
+<style>.grid-tex{background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:26px 26px}</style>
+</head>
+<body class="font-sans text-ink">
+<div class="min-h-screen grid lg:grid-cols-2">
+
+  <!-- left: brand panel -->
+  <div class="hidden lg:flex bg-ink text-white relative">
+    <div class="grid-tex absolute inset-0"></div>
+    <div class="relative z-10 flex flex-col justify-between p-12">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-sun/15 grid place-items-center">
+          <svg viewBox="0 0 24 24" class="w-6 h-6 text-sun" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
+        </div>
+        <div><div class="font-display font-bold text-lg">REMI Solar Services</div>
+          <div class="text-[11px] uppercase tracking-wide text-slate-400">Mail Triage</div></div>
+      </div>
+      <div>
+        <h2 class="font-display text-3xl font-bold leading-snug">Every email,<br>sorted by sunrise.</h2>
+        <p class="text-slate-400 mt-3 max-w-sm">Automatic classification, prioritisation and routing for the whole company — with a human in the loop where it counts.</p>
+      </div>
+      <p class="text-[12px] font-mono text-slate-500">GDPR-aware · EU-hosted · role-based access</p>
+    </div>
+  </div>
+
+  <!-- right: form -->
+  <div class="flex items-center justify-center p-8 bg-surface">
+    <div class="w-full max-w-sm">
+      <h1 class="font-display text-2xl font-bold">Sign in</h1>
+      <p class="text-muted text-sm mt-1 mb-6">Use your company account to continue.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="rounded-lg px-4 py-2.5 text-sm mb-4 bg-red-50 border border-red-200 text-red-700">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="post" class="space-y-4">
+        <div>
+          <label class="block text-[13px] font-medium mb-1.5">Email</label>
+          <input name="email" type="email" required autofocus
+                 class="w-full border border-line rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sun/40 focus:border-sun"
+                 placeholder="you@remi-solar.eu">
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium mb-1.5">Password</label>
+          <input name="password" type="password" required
+                 class="w-full border border-line rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sun/40 focus:border-sun"
+                 placeholder="••••••••">
+        </div>
+        <button class="w-full bg-ink text-white font-medium rounded-lg py-2.5 text-sm hover:bg-inksoft transition">
+          Sign in</button>
+      </form>
+
+      <div class="mt-6 text-[12px] text-muted bg-white border border-line rounded-lg p-3 font-mono leading-relaxed">
+        <span class="font-sans font-semibold text-ink">Demo accounts</span><br>
+        admin@remi-solar.eu / admin123<br>
+        sales@remi-solar.eu / sales123<br>
+        verify@remi-solar.eu / verify123
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

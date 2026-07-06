@@ -1,0 +1,28 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% macro category_badge(c) %}
+  {% set colors = {'lead':'bg-green-50 text-ok','installation':'bg-indigo-50 text-indigo-600',
+                   'maintenance':'bg-blue-50 text-panel','invoices':'bg-amber-50 text-warn',
+                   'support':'bg-slate-100 text-muted'} %}
+  {% if c %}<span class="badge {{ colors.get(c,'bg-slate-100 text-muted') }}">{{ c }}</span>
+  {% else %}<span class="badge bg-slate-100 text-muted">—</span>{% endif %}
+{% endmacro %}
+
+{% macro priority_badge(p) %}
+  {% set colors = {'critical':'bg-red-50 text-danger font-semibold','high':'bg-amber-50 text-warn font-semibold',
+                   'medium':'bg-slate-100 text-muted','low':'bg-slate-100 text-muted'} %}
+  {% if p %}<span class="badge {{ colors.get(p,'bg-slate-100 text-muted') }}">{{ p }}</span>
+  {% else %}<span class="badge bg-slate-100 text-muted">—</span>{% endif %}
+{% endmacro %}
+
+{% macro status_badge(s) %}
+  {% set colors = {'routed':'bg-green-50 text-ok','manual_review':'bg-amber-50 text-warn',
+                   'received':'bg-slate-100 text-muted','processing':'bg-blue-50 text-panel',
+                   'classified':'bg-blue-50 text-panel','failed':'bg-red-50 text-danger',
+                   'completed':'bg-slate-100 text-muted'} %}
+  <span class="badge {{ colors.get(s,'bg-slate-100 text-muted') }}">{{ s.replace('_',' ') }}</span>
+{% endmacro %}
+
+{% macro confidence(v, threshold=0.70) %}
+  {% if v is none %}<span class="font-mono text-muted">—</span>
+  {% else %}<span class="font-mono {{ 'text-ok' if v>=threshold else 'text-danger' }}">{{ '%.2f'|format(v) }}</span>{% endif %}
+{% endmacro %}

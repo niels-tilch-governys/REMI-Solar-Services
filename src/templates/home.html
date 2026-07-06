@@ -1,0 +1,118 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% set thr = settings.confidence_threshold|float %}
+{% block title %}Home · REMI Solar Services{% endblock %}
+{% block heading %}Good day, {{ user.full_name.split()[0] }}{% endblock %}
+{% block subheading %}Overview · {{ scope_label }}{% endblock %}
+
+{% block content %}
+<!-- stat cards -->
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+  <div class="bg-card border border-line rounded-xl p-5">
+    <div class="flex items-center justify-between"><span class="text-[12px] text-muted font-medium">Emails today</span><i data-lucide="mail" class="w-4 h-4 text-muted"></i></div>
+    <div class="font-display text-3xl font-bold mt-2">{{ stats.today }}</div>
+    <div class="text-[12px] text-muted mt-1">{{ stats.total }} total{{ ' in your dept' if is_viewer }}</div>
+  </div>
+  <div class="bg-card border border-line rounded-xl p-5">
+    <div class="flex items-center justify-between"><span class="text-[12px] text-muted font-medium">Auto-classified</span><i data-lucide="sparkles" class="w-4 h-4 text-muted"></i></div>
+    {% set pct = (100 * stats.auto / stats.total)|round(1) if stats.total else 0 %}
+    <div class="font-display text-3xl font-bold mt-2">{{ pct }}<span class="text-lg text-muted">%</span></div>
+    <div class="mt-2 h-1.5 rounded-full bg-line overflow-hidden"><div class="h-full bg-sun" style="width:{{ pct }}%"></div></div>
+  </div>
+  {% if is_viewer %}
+  <div class="bg-card border border-line rounded-xl p-5">
+    <div class="flex items-center justify-between"><span class="text-[12px] text-muted font-medium">High priority</span><i data-lucide="flame" class="w-4 h-4 text-muted"></i></div>
+    <div class="font-display text-3xl font-bold mt-2">{{ stats.high }}</div>
+    <div class="text-[12px] text-warn mt-1">high / critical, needs action</div>
+  </div>
+  <div class="bg-card border border-line rounded-xl p-5">
+    <div class="flex items-center justify-between"><span class="text-[12px] text-muted font-medium">In your department</span><i data-lucide="inbox" class="w-4 h-4 text-muted"></i></div>
+    <div class="font-display text-3xl font-bold mt-2">{{ stats.total }}</div>
+    <div class="text-[12px] text-muted mt-1">emails routed to you</div>
+  </div>
+  {% else %}
+  <div class="bg-card border border-line rounded-xl p-5">
+    <div class="flex items-center justify-between"><span class="text-[12px] text-muted font-medium">Awaiting review</span><i data-lucide="clock" class="w-4 h-4 text-muted"></i></div>
+    <div class="font-display text-3xl font-bold mt-2">{{ stats.pending }}</div>
+    <div class="text-[12px] text-warn mt-1">human-in-the-loop queue</div>
+  </div>
+  <div class="bg-card border border-line rounded-xl p-5">
+    <div class="flex items-center justify-between"><span class="text-[12px] text-muted font-medium">Confidence threshold</span><i data-lucide="gauge" class="w-4 h-4 text-muted"></i></div>
+    <div class="font-display text-3xl font-bold mt-2 font-mono">{{ settings.confidence_threshold }}</div>
+    <div class="text-[12px] text-muted mt-1">below this → manual review</div>
+  </div>
+  {% endif %}
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- recent -->
+  <section class="lg:col-span-2 bg-card border border-line rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-line"><h2 class="font-display font-semibold text-[15px]">Recent classifications</h2></div>
+    <table class="w-full text-sm">
+      <thead class="text-[11px] uppercase tracking-wide text-muted bg-surface/60">
+        <tr><th class="text-left font-semibold px-5 py-2.5">Sender</th><th class="text-left font-semibold py-2.5">Subject</th>
+            <th class="text-left font-semibold py-2.5">Category</th><th class="text-left font-semibold py-2.5">Priority</th>
+            <th class="text-left font-semibold py-2.5">Dept</th><th class="text-right font-semibold px-5 py-2.5">Conf.</th></tr>
+      </thead>
+      <tbody class="divide-y divide-line">
+        {% for e in recent %}
+        <tr class="hover:bg-surface/60 {{ 'bg-sunsoft/30' if e.confidence and e.confidence<thr }}">
+          <td class="px-5 py-3 font-medium truncate max-w-[140px]">{{ e.sender_email }}</td>
+          <td class="py-3 max-w-[220px] truncate">{{ e.subject }}</td>
+          <td class="py-3">{{ m.category_badge(e.category) }}</td>
+          <td class="py-3">{{ m.priority_badge(e.priority) }}</td>
+          <td class="py-3 text-muted">{{ e.dept or '—' }}</td>
+          <td class="px-5 py-3 text-right">{{ m.confidence(e.confidence, thr) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="px-5 py-8 text-center text-muted">No emails yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- right -->
+  <section class="space-y-6">
+    <div class="bg-card border border-line rounded-xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-display font-semibold text-[15px]">{{ attention_title }}</h2>
+        <span class="text-[11px] font-mono bg-sun text-ink rounded-full px-2 py-0.5">{{ attention|length }}</span>
+      </div>
+      <div class="space-y-3 text-sm">
+        {% for r in attention %}
+        <div class="flex items-start gap-3">
+          <span class="mt-1 w-2 h-2 rounded-full shrink-0 {{ 'bg-danger' if r.danger else 'bg-warn' }}"></span>
+          <div><div class="font-medium leading-tight">{{ r.line1 }}</div>
+            <div class="text-muted text-[12px] truncate max-w-[200px]">{{ r.line2 }}</div></div>
+        </div>
+        {% else %}<p class="text-muted text-sm">All clear. 🎉</p>{% endfor %}
+      </div>
+    </div>
+
+    <div class="bg-card border border-line rounded-xl p-5">
+      <h2 class="font-display font-semibold text-[15px] mb-3">Active AI engine</h2>
+      <div class="space-y-3 text-sm">
+        {% set ocr_model = settings.mistral_ocr_model if settings.ocr_provider=='mistral' else settings.local_ocr_model %}
+        {% set llm_model = settings.mistral_llm_model if settings.llm_provider=='mistral' else settings.local_llm_model %}
+        <div class="flex items-center justify-between"><span class="text-muted">OCR</span>
+          <span class="font-mono text-[12px]">{{ ocr_model }} <span class="badge {{ 'bg-blue-50 text-panel' if settings.ocr_provider=='mistral' else 'bg-slate-100 text-muted' }}">{{ settings.ocr_provider }}</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-muted">Classification</span>
+          <span class="font-mono text-[12px]">{{ llm_model }} <span class="badge {{ 'bg-blue-50 text-panel' if settings.llm_provider=='mistral' else 'bg-slate-100 text-muted' }}">{{ settings.llm_provider }}</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-muted">Routing target</span><span class="font-mono text-[12px]">{{ (settings.routing_accuracy_target|float*100)|round }}%</span></div>
+      </div>
+    </div>
+
+    <div class="bg-card border border-line rounded-xl p-5">
+      <h2 class="font-display font-semibold text-[15px] mb-4">By category</h2>
+      <div class="space-y-3 text-[13px]">
+        {% set maxn = (by_cat|map(attribute='n')|max) if by_cat else 1 %}
+        {% for c in by_cat %}
+        <div><div class="flex justify-between mb-1"><span class="capitalize">{{ c.name }}</span><span class="font-mono text-muted">{{ c.n }}</span></div>
+          <div class="h-2 rounded-full bg-line overflow-hidden"><div class="h-full bg-panel" style="width:{{ (100*c.n/maxn)|round }}%"></div></div></div>
+        {% else %}<p class="text-muted">No data.</p>{% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

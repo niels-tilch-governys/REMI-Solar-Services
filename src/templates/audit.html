@@ -1,0 +1,60 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% block title %}Audit{% endblock %}
+{% block heading %}Audit log{% endblock %}
+{% block subheading %}Append-only record of system and user actions{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between gap-3 flex-wrap">
+  <div class="flex items-center gap-2 flex-wrap">
+    <a href="{{ url_for('audit') }}" class="text-[13px] px-3 py-1.5 rounded-lg border {{ 'bg-ink text-white border-ink' if not current else 'border-line text-muted hover:bg-surface' }}">All</a>
+    {% for a in actions %}
+    <a href="{{ url_for('audit', action=a) }}" class="text-[13px] px-3 py-1.5 rounded-lg border {{ 'bg-ink text-white border-ink' if current==a else 'border-line text-muted hover:bg-surface' }}">{{ a.replace('_',' ') }}</a>
+    {% endfor %}
+  </div>
+  <a href="{{ url_for('audit_export', action=current) }}"
+     class="text-[13px] font-medium px-4 py-2 rounded-lg bg-ok/10 text-ok border border-ok/30 hover:bg-ok/20 transition flex items-center gap-2 shrink-0">
+    <i data-lucide="file-down" class="w-4 h-4"></i> Export to Excel{{ ' (' + current.replace('_',' ') + ')' if current }}</a>
+</div>
+
+<section class="bg-card border border-line rounded-xl overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="text-[11px] uppercase tracking-wide text-muted bg-surface/60">
+      <tr><th class="text-left font-semibold px-5 py-2.5">Log ID</th><th class="text-left font-semibold py-2.5">Time</th><th class="text-left font-semibold py-2.5">Action</th>
+          <th class="text-left font-semibold py-2.5">Actor</th><th class="text-left font-semibold py-2.5">Entity</th>
+          <th class="text-left font-semibold py-2.5">Model</th><th class="text-left font-semibold px-5 py-2.5">Details</th></tr>
+    </thead>
+    <tbody class="divide-y divide-line font-mono text-[12.5px]">
+      {% for l in logs %}
+      <tr class="hover:bg-surface/60">
+        <td class="px-5 py-2.5 text-muted" title="{{ l.uuid }}">{{ l.uuid[:8] if l.uuid else '—' }}…</td>
+        <td class="py-2.5 text-muted whitespace-nowrap">{{ l.created_at }}</td>
+        <td class="py-2.5"><span class="badge bg-slate-100 text-ink">{{ l.action_type }}</span></td>
+        <td class="py-2.5 font-sans">{{ l.who or 'system' }}</td>
+        <td class="py-2.5 text-muted">{{ l.entity_type or '—' }}{% if l.entity_id %}#{{ l.entity_id }}{% endif %}</td>
+        <td class="py-2.5 text-muted">{{ l.model_version or '—' }}</td>
+        <td class="px-5 py-2.5 text-muted max-w-[280px] truncate">{{ l.details or '' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="px-5 py-10 text-center text-muted font-sans">No log entries.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if total %}
+  <div class="flex items-center justify-between px-5 py-3 border-t border-line text-sm">
+    <span class="text-muted">Showing <span class="font-mono text-ink">{{ start }}–{{ end }}</span> of <span class="font-mono text-ink">{{ total }}</span></span>
+    <div class="flex items-center gap-1.5">
+      {% set prev_disabled = page <= 1 %}
+      {% set next_disabled = page >= pages %}
+      <a {% if not prev_disabled %}href="{{ url_for('audit', action=current, page=page-1) }}"{% endif %}
+         class="px-3 py-1.5 rounded-lg border border-line flex items-center gap-1 {{ 'text-muted/40 pointer-events-none' if prev_disabled else 'text-ink hover:bg-surface' }}">
+        <i data-lucide="chevron-left" class="w-4 h-4"></i> Prev</a>
+      <span class="px-3 py-1.5 text-muted">Page <span class="font-mono text-ink">{{ page }}</span> / {{ pages }}</span>
+      <a {% if not next_disabled %}href="{{ url_for('audit', action=current, page=page+1) }}"{% endif %}
+         class="px-3 py-1.5 rounded-lg border border-line flex items-center gap-1 {{ 'text-muted/40 pointer-events-none' if next_disabled else 'text-ink hover:bg-surface' }}">
+        Next <i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

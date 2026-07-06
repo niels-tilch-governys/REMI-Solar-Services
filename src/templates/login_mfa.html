@@ -1,0 +1,33 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify · REMI Solar Services</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{ink:'#0E1424',inksoft:'#1A2236',sun:'#F5A524',line:'#E7E9EE',danger:'#EF4444',muted:'#6B7280'},fontFamily:{display:['"Space Grotesk"','sans-serif'],sans:['Inter','sans-serif'],mono:['"IBM Plex Mono"','monospace']}}}}</script>
+</head>
+<body class="font-sans text-ink bg-surface min-h-screen grid place-items-center bg-[#F6F7F9]">
+  <div class="w-full max-w-sm bg-white border border-line rounded-2xl p-8 shadow-sm">
+    <div class="w-11 h-11 rounded-xl bg-sun/15 grid place-items-center mb-4">
+      <svg viewBox="0 0 24 24" class="w-6 h-6 text-sun" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+    </div>
+    <h1 class="font-display text-xl font-bold">Two-factor verification</h1>
+    <p class="text-muted text-sm mt-1 mb-6">Enter the 6-digit code from your authenticator app.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+      <div class="rounded-lg px-4 py-2.5 text-sm mb-4 bg-red-50 border border-red-200 text-red-700">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" class="space-y-4">
+      <input name="code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" required autofocus
+             class="w-full border border-line rounded-lg px-3 py-3 font-mono text-2xl tracking-[.5em] text-center focus:outline-none focus:ring-2 focus:ring-sun/40 focus:border-sun" placeholder="000000">
+      <button class="w-full bg-ink text-white font-medium rounded-lg py-2.5 text-sm hover:bg-inksoft transition">Verify</button>
+    </form>
+    <a href="{{ url_for('login') }}" class="block text-center text-[13px] text-muted mt-4 hover:text-ink">Back to sign in</a>
+  </div>
+</body>
+</html>

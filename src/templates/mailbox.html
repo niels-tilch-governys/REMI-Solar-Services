@@ -1,0 +1,32 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Mailbox · {{ title }}{% endblock %}
+{% block heading %}{{ title }} mailbox{% endblock %}
+{% block subheading %}{{ emails|length }} email(s) routed here{% endblock %}
+{% block content %}
+<section class="bg-card border border-line rounded-xl overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="text-[11px] uppercase tracking-wide text-muted bg-surface/60">
+      <tr><th class="text-left font-semibold px-5 py-2.5">Sender</th><th class="text-left font-semibold py-2.5">Subject &amp; summary</th>
+          <th class="text-left font-semibold py-2.5">Category</th><th class="text-left font-semibold py-2.5">Priority</th>
+          <th class="text-left font-semibold py-2.5">Received</th><th class="text-right font-semibold px-5 py-2.5">Conf.</th></tr>
+    </thead>
+    <tbody class="divide-y divide-line">
+      {% for e in emails %}
+      <tr class="hover:bg-surface/60 cursor-pointer" onclick="location.href='{{ url_for('email_detail', euid=e.uuid) }}'">
+        <td class="px-5 py-3 font-medium truncate max-w-[150px]">{{ e.sender_email }}</td>
+        <td class="py-3 max-w-[320px]"><div class="font-medium truncate">{{ e.subject }}</div>
+            <div class="text-muted text-[12px] truncate">{{ e.summary }}</div></td>
+        <td class="py-3">{{ m.category_badge(e.category) }}</td>
+        <td class="py-3">{{ m.priority_badge(e.priority) }}</td>
+        <td class="py-3 text-muted font-mono text-[12px]">{{ e.received_at }}</td>
+        <td class="px-5 py-3 text-right">{{ m.confidence(e.confidence) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="px-5 py-10 text-center text-muted">No emails routed to this mailbox yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

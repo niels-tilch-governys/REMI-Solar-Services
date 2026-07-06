@@ -1,0 +1,65 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% block title %}Users &amp; Roles{% endblock %}
+{% block heading %}Users &amp; roles{% endblock %}
+{% block subheading %}{{ total }} account(s){% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <section class="lg:col-span-2 bg-card border border-line rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="text-[11px] uppercase tracking-wide text-muted bg-surface/60">
+        <tr><th class="text-left font-semibold px-5 py-2.5">Name</th><th class="text-left font-semibold py-2.5">Email</th>
+            <th class="text-left font-semibold py-2.5">Role</th><th class="text-left font-semibold py-2.5">Dept</th>
+            <th class="text-left font-semibold py-2.5">UUID</th><th class="text-left font-semibold px-5 py-2.5">Last login</th></tr>
+      </thead>
+      <tbody class="divide-y divide-line">
+        {% for u in users %}
+        <tr class="hover:bg-surface/60">
+          <td class="px-5 py-3 font-medium">{{ u.full_name }}{% if not u.is_active %}<span class="badge bg-slate-100 text-muted ml-2">inactive</span>{% endif %}</td>
+          <td class="py-3 font-mono text-[12px]">{{ u.email }}</td>
+          <td class="py-3"><span class="badge bg-blue-50 text-panel">{{ u.role_name.replace('_',' ') }}</span></td>
+          <td class="py-3 text-muted">{{ u.dept_name or '—' }}</td>
+          <td class="py-3 font-mono text-[11px] text-muted" title="{{ u.uuid }}">{{ u.uuid[:8] }}…</td>
+          <td class="px-5 py-3 text-muted font-mono text-[12px]">{{ u.last_login_at or 'never' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if total %}
+    <div class="flex items-center justify-between px-5 py-3 border-t border-line text-sm">
+      <span class="text-muted">Showing <span class="font-mono text-ink">{{ start }}–{{ end }}</span> of <span class="font-mono text-ink">{{ total }}</span></span>
+      <div class="flex items-center gap-1.5">
+        {% set prev_disabled = page <= 1 %}{% set next_disabled = page >= pages %}
+        <a {% if not prev_disabled %}href="{{ url_for('users', page=page-1) }}"{% endif %}
+           class="px-3 py-1.5 rounded-lg border border-line flex items-center gap-1 {{ 'text-muted/40 pointer-events-none' if prev_disabled else 'text-ink hover:bg-surface' }}">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i> Prev</a>
+        <span class="px-3 py-1.5 text-muted">Page <span class="font-mono text-ink">{{ page }}</span> / {{ pages }}</span>
+        <a {% if not next_disabled %}href="{{ url_for('users', page=page+1) }}"{% endif %}
+           class="px-3 py-1.5 rounded-lg border border-line flex items-center gap-1 {{ 'text-muted/40 pointer-events-none' if next_disabled else 'text-ink hover:bg-surface' }}">
+          Next <i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="bg-card border border-line rounded-xl p-5 h-fit">
+    <h2 class="font-display font-semibold text-[15px] mb-4">Add user</h2>
+    <form method="post" action="{{ url_for('users_create') }}" class="space-y-3 text-sm">
+      <div><label class="block text-[13px] font-medium mb-1">Full name</label>
+        <input name="full_name" required class="w-full border border-line rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sun/40"></div>
+      <div><label class="block text-[13px] font-medium mb-1">Email</label>
+        <input name="email" type="email" required class="w-full border border-line rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sun/40"></div>
+      <div><label class="block text-[13px] font-medium mb-1">Temporary password</label>
+        <input name="password" type="text" required minlength="8" class="w-full border border-line rounded-lg px-3 py-2 font-mono focus:outline-none focus:ring-2 focus:ring-sun/40"></div>
+      <div><label class="block text-[13px] font-medium mb-1">Role</label>
+        <select name="role_id" required class="w-full border border-line rounded-lg px-3 py-2 bg-white">
+          {% for r in roles %}<option value="{{ r.id }}">{{ r.name.replace('_',' ') }}</option>{% endfor %}</select></div>
+      <div><label class="block text-[13px] font-medium mb-1">Department <span class="text-muted">(viewers only)</span></label>
+        <select name="department_uuid" class="w-full border border-line rounded-lg px-3 py-2 bg-white">
+          <option value="">—</option>{% for d in depts %}<option value="{{ d.uuid }}">{{ d.name }}</option>{% endfor %}</select></div>
+      <button class="w-full bg-ink text-white font-medium rounded-lg py-2.5 hover:bg-inksoft transition">Create user</button>
+      <p class="text-[11px] text-muted">Password is hashed with bcrypt before storage.</p>
+    </form>
+  </section>
+</div>
+{% endblock %}

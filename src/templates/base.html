@@ -1,0 +1,125 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}REMI Solar Services · Triage{% endblock %}</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { ink:'#0E1424', inksoft:'#1A2236', inkline:'#26304a', sun:'#F5A524',
+            sunsoft:'#FDE6BD', panel:'#2563EB', surface:'#F6F7F9', card:'#FFFFFF',
+            line:'#E7E9EE', ok:'#10B981', warn:'#F59E0B', danger:'#EF4444', muted:'#6B7280' },
+  fontFamily: { display:['"Space Grotesk"','sans-serif'], sans:['Inter','sans-serif'], mono:['"IBM Plex Mono"','monospace'] }
+}}}
+</script>
+<style>
+  .nav-item{transition:all .15s ease}
+  .nav-item:hover{background:#1A2236}
+  .nav-active{background:linear-gradient(90deg,rgba(245,165,36,.16),transparent);box-shadow:inset 2px 0 0 #F5A524;color:#fff}
+  .grid-tex{background-image:linear-gradient(#ffffff14 1px,transparent 1px),linear-gradient(90deg,#ffffff14 1px,transparent 1px);background-size:22px 22px}
+  ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#cfd4dd;border-radius:6px}
+  .badge{font-size:11px;font-weight:500;padding:1px 8px;border-radius:9999px}
+</style>
+</head>
+<body class="font-sans text-ink bg-surface">
+<div class="flex min-h-screen">
+
+  <aside class="w-64 shrink-0 bg-ink text-slate-300 flex flex-col fixed h-screen z-10">
+    <div class="px-5 h-16 flex items-center gap-3 border-b border-inkline">
+      <div class="w-9 h-9 rounded-lg bg-sun/15 grid place-items-center">
+        <svg viewBox="0 0 24 24" class="w-5 h-5 text-sun" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>
+        </svg>
+      </div>
+      <div class="leading-tight min-w-0">
+        <div class="font-display font-bold text-white text-[13.5px] whitespace-nowrap tracking-tight">REMI Solar Services</div>
+        <div class="text-[11px] tracking-wide text-slate-400 uppercase">Mail Triage</div>
+      </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-6 text-[13.5px]">
+      {% for section, items in nav %}
+      <div>
+        <p class="px-3 mb-2 text-[10.5px] font-semibold tracking-[.12em] text-slate-500 uppercase">{{ section }}</p>
+        {% for key, label, icon in items %}
+        <a href="{{ url_for(key) }}"
+           class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg {{ 'nav-active' if active==key }}">
+          <i data-lucide="{{ icon }}" class="w-[18px] h-[18px]"></i>{{ label }}
+          {% if key=='verification' and pending_reviews %}
+          <span class="ml-auto text-[11px] font-mono bg-sun text-ink rounded-full px-1.5">{{ pending_reviews }}</span>
+          {% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </nav>
+
+    <div class="px-3 py-3 border-t border-inkline space-y-1">
+      <a href="{{ url_for('profile') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg {{ 'nav-active' if active=='profile' }}">
+        <i data-lucide="user-cog" class="w-[18px] h-[18px]"></i>Profile</a>
+      <a href="{{ url_for('logout') }}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400">
+        <i data-lucide="log-out" class="w-[18px] h-[18px]"></i>Log out</a>
+    </div>
+  </aside>
+
+  <main class="flex-1 ml-64 min-w-0">
+    <header class="bg-ink text-white">
+      <div class="grid-tex">
+        <div class="px-8 py-6 flex items-center justify-between">
+          <div>
+            <p class="text-[12px] font-mono text-sun/90 mb-1">{{ now }}</p>
+            <h1 class="font-display text-2xl font-bold">{% block heading %}{% endblock %}</h1>
+            <p class="text-slate-400 text-sm mt-1">{% block subheading %}{% endblock %}</p>
+          </div>
+          <div class="relative" x-dropdown>
+            <button type="button" onclick="this.nextElementSibling.classList.toggle('hidden')"
+              class="flex items-center gap-2 bg-inksoft border border-inkline rounded-lg pl-1 pr-2 py-1 hover:border-sun/50 transition">
+              <div class="w-8 h-8 rounded-md bg-sun text-ink grid place-items-center font-display font-bold text-sm">
+                {{ user.full_name.split()|map('first')|join|upper }}</div>
+              <div class="leading-tight text-left">
+                <div class="text-[13px] font-semibold">{{ user.full_name }}</div>
+                <div class="text-[10.5px] text-sun/90 uppercase tracking-wide">{{ user.role_name.replace('_',' ').replace(' administrator',' admin') }}</div>
+              </div>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 ml-1"></i>
+            </button>
+            <div class="hidden absolute right-0 mt-2 w-48 bg-white text-ink rounded-lg shadow-lg border border-line py-1 z-20">
+              <a href="{{ url_for('profile') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-surface">
+                <i data-lucide="settings" class="w-4 h-4 text-muted"></i> Settings</a>
+              <div class="h-px bg-line my-1"></div>
+              <a href="{{ url_for('logout') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-danger hover:bg-red-50">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Log out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-8 py-7 space-y-6">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="rounded-lg px-4 py-3 text-sm border
+          {{ 'bg-green-50 border-green-200 text-green-800' if cat=='success' else 'bg-red-50 border-red-200 text-red-800' }}">
+          {{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+<script>
+  lucide.createIcons();
+  document.addEventListener('click', function(e){
+    document.querySelectorAll('[x-dropdown]').forEach(function(dd){
+      if(!dd.contains(e.target)){ dd.querySelector('div.absolute')?.classList.add('hidden'); }
+    });
+  });
+</script>
+</body>
+</html>

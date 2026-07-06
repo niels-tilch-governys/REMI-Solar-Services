@@ -1,0 +1,109 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block heading %}Settings{% endblock %}
+{% block subheading %}AI engine, thresholds and triage configuration{% endblock %}
+{% block content %}
+
+<!-- ============ AI USAGE STATISTICS ============ -->
+<section>
+  <h2 class="font-display font-semibold text-[15px] mb-3">AI usage</h2>
+  <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    {% macro stat(label, value, icon, sub='') %}
+    <div class="bg-card border border-line rounded-xl p-4">
+      <div class="flex items-center justify-between"><span class="text-[12px] text-muted font-medium">{{ label }}</span><i data-lucide="{{ icon }}" class="w-4 h-4 text-muted"></i></div>
+      <div class="font-display text-2xl font-bold mt-1.5">{{ value }}</div>
+      {% if sub %}<div class="text-[11px] text-muted mt-0.5">{{ sub }}</div>{% endif %}
+    </div>
+    {% endmacro %}
+    {{ stat('Pages scanned', usage.pages, 'scan-line', usage.ocr_docs ~ ' OCR docs') }}
+    {{ stat('Input tokens', '{:,}'.format(usage.in_tok), 'arrow-down-to-line') }}
+    {{ stat('Output tokens', '{:,}'.format(usage.out_tok), 'arrow-up-from-line') }}
+    {{ stat('Total tokens', '{:,}'.format(usage.total_tok), 'coins') }}
+    {{ stat('Emails analyzed', usage.emails, 'mails') }}
+    {{ stat('Avg. confidence', '%.2f'|format(usage.avg_conf), 'gauge') }}
+  </div>
+
+  {% if by_model %}
+  <div class="bg-card border border-line rounded-xl overflow-hidden mt-4">
+    <table class="w-full text-sm">
+      <thead class="text-[11px] uppercase tracking-wide text-muted bg-surface/60">
+        <tr><th class="text-left font-semibold px-5 py-2.5">Model</th><th class="text-left font-semibold py-2.5">Provider</th>
+            <th class="text-left font-semibold py-2.5">Task</th><th class="text-right font-semibold py-2.5">Calls</th>
+            <th class="text-right font-semibold py-2.5">Pages</th><th class="text-right font-semibold px-5 py-2.5">Tokens</th></tr>
+      </thead>
+      <tbody class="divide-y divide-line font-mono text-[12.5px]">
+        {% for r in by_model %}
+        <tr class="hover:bg-surface/60">
+          <td class="px-5 py-2.5">{{ r.model_version }}</td>
+          <td class="py-2.5"><span class="badge {{ 'bg-blue-50 text-panel' if r.provider=='mistral' else 'bg-slate-100 text-muted' }}">{{ r.provider }}</span></td>
+          <td class="py-2.5 text-muted font-sans">{{ r.kind }}</td>
+          <td class="py-2.5 text-right">{{ r.calls }}</td>
+          <td class="py-2.5 text-right">{{ r.pages }}</td>
+          <td class="px-5 py-2.5 text-right">{{ '{:,}'.format(r.tokens) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+
+<form method="post" class="space-y-6">
+  <!-- ============ AI ENGINE ============ -->
+  <section class="bg-card border border-line rounded-xl p-6">
+    <h2 class="font-display font-semibold text-[15px] mb-1">AI engine</h2>
+    <p class="text-sm text-muted mb-5">Choose, per task, whether to use the Mistral API or the on-prem local models.</p>
+
+    <div class="grid sm:grid-cols-2 gap-6">
+      <!-- OCR engine -->
+      <div>
+        <label class="block text-[13px] font-semibold mb-2">Document OCR</label>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 border border-line rounded-lg px-3 py-2.5 cursor-pointer has-[:checked]:border-sun has-[:checked]:bg-sunsoft/20">
+            <input type="radio" name="ocr_provider" value="mistral" class="accent-sun" {{ 'checked' if cfg.ocr_provider=='mistral' }}>
+            <span class="text-sm"><span class="font-medium">Mistral OCR</span><br><span class="text-muted font-mono text-[12px]">{{ cfg.mistral_ocr_model }}</span></span></label>
+          <label class="flex items-center gap-3 border border-line rounded-lg px-3 py-2.5 cursor-pointer has-[:checked]:border-sun has-[:checked]:bg-sunsoft/20">
+            <input type="radio" name="ocr_provider" value="local" class="accent-sun" {{ 'checked' if cfg.ocr_provider=='local' }}>
+            <span class="text-sm"><span class="font-medium">Local OCR</span><br><span class="text-muted font-mono text-[12px]">{{ cfg.local_ocr_model }}</span></span></label>
+        </div>
+      </div>
+      <!-- Classification engine -->
+      <div>
+        <label class="block text-[13px] font-semibold mb-2">Classification &amp; extraction</label>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 border border-line rounded-lg px-3 py-2.5 cursor-pointer has-[:checked]:border-sun has-[:checked]:bg-sunsoft/20">
+            <input type="radio" name="llm_provider" value="mistral" class="accent-sun" {{ 'checked' if cfg.llm_provider=='mistral' }}>
+            <span class="text-sm"><span class="font-medium">Mistral Large</span><br><span class="text-muted font-mono text-[12px]">{{ cfg.mistral_llm_model }}</span></span></label>
+          <label class="flex items-center gap-3 border border-line rounded-lg px-3 py-2.5 cursor-pointer has-[:checked]:border-sun has-[:checked]:bg-sunsoft/20">
+            <input type="radio" name="llm_provider" value="local" class="accent-sun" {{ 'checked' if cfg.llm_provider=='local' }}>
+            <span class="text-sm"><span class="font-medium">Local classifier</span><br><span class="text-muted font-mono text-[12px]">{{ cfg.local_llm_model }}</span></span></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRIAGE CONFIG ============ -->
+  <section class="bg-card border border-line rounded-xl divide-y divide-line">
+    {% set labels = {
+      'confidence_threshold':'Confidence threshold — below this an email goes to manual review',
+      'flagged_topics':'Flagged topics — comma-separated, always routed to review',
+      'classification_target_seconds':'Classification target (seconds)',
+      'routing_accuracy_target':'Routing accuracy target (0–1)'
+    } %}
+    {% for key in ['confidence_threshold','flagged_topics','classification_target_seconds','routing_accuracy_target'] %}
+    <div class="p-5 flex items-center gap-6">
+      <div class="flex-1"><label class="block text-sm font-medium">{{ labels[key] }}</label>
+        <p class="text-[12px] text-muted font-mono mt-0.5">{{ key }}</p></div>
+      <input name="{{ key }}" value="{{ cfg[key] }}" class="w-64 border border-line rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sun/40">
+    </div>
+    {% endfor %}
+    <!-- keep model-name settings editable but compact -->
+    {% for key in ['mistral_ocr_model','mistral_llm_model','local_ocr_model','local_llm_model'] %}
+    <input type="hidden" name="{{ key }}" value="{{ cfg[key] }}">
+    {% endfor %}
+  </section>
+
+  <button class="bg-ink text-white font-medium rounded-lg px-5 py-2.5 text-sm hover:bg-inksoft transition">Save changes</button>
+</form>
+{% endblock %}

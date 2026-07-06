@@ -1,0 +1,81 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block heading %}Your profile{% endblock %}
+{% block subheading %}Account, password and two-factor authentication{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-5xl">
+  <section class="bg-card border border-line rounded-xl p-5 h-fit">
+    <h2 class="font-display font-semibold text-[15px] mb-4">Account</h2>
+    <dl class="space-y-3 text-sm">
+      <div class="flex justify-between"><dt class="text-muted">Name</dt><dd class="font-medium">{{ user.full_name }}</dd></div>
+      <div class="flex justify-between"><dt class="text-muted">Email</dt><dd class="font-mono text-[12px]">{{ user.email }}</dd></div>
+      <div class="flex justify-between"><dt class="text-muted">Role</dt><dd><span class="badge bg-blue-50 text-panel">{{ user.role_name.replace('_',' ') }}</span></dd></div>
+      <div class="flex justify-between"><dt class="text-muted">Department</dt><dd>{{ user.dept_name or '—' }}</dd></div>
+      <div class="flex justify-between items-center"><dt class="text-muted">Two-factor</dt>
+        <dd>{% if user.mfa_enabled %}<span class="badge bg-green-50 text-ok">on</span>{% else %}<span class="badge bg-slate-100 text-muted">off</span>{% endif %}</dd></div>
+    </dl>
+  </section>
+
+  <div class="lg:col-span-2 space-y-6">
+    <section class="bg-card border border-line rounded-xl p-5">
+      <h2 class="font-display font-semibold text-[15px] mb-4">Change password</h2>
+      <form method="post" class="space-y-3 text-sm max-w-sm">
+        <div><label class="block text-[13px] font-medium mb-1">Current password</label>
+          <input name="current" type="password" required class="w-full border border-line rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sun/40"></div>
+        <div><label class="block text-[13px] font-medium mb-1">New password</label>
+          <input name="new" type="password" required minlength="8" class="w-full border border-line rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sun/40"></div>
+        <button class="bg-ink text-white font-medium rounded-lg px-5 py-2.5 hover:bg-inksoft transition">Update password</button>
+        <p class="text-[11px] text-muted">Minimum 8 characters · hashed with bcrypt.</p>
+      </form>
+    </section>
+
+    <section class="bg-card border border-line rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="shield-check" class="w-5 h-5 text-sun"></i>
+        <h2 class="font-display font-semibold text-[15px]">Two-factor authentication</h2>
+      </div>
+      <p class="text-sm text-muted mb-4">A 6-digit code from an authenticator app (Google Authenticator, Authy, 1Password...) is required at sign-in.</p>
+
+      {% if user.mfa_enabled %}
+        <div class="flex items-center gap-2 text-sm mb-4"><span class="w-2 h-2 rounded-full bg-ok"></span> Two-factor is <strong>on</strong> for your account.</div>
+        <form method="post" action="{{ url_for('mfa_disable') }}" class="flex items-end gap-3">
+          <div><label class="block text-[13px] font-medium mb-1">Enter a current code to turn off</label>
+            <input name="code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" required
+                   class="w-40 border border-line rounded-lg px-3 py-2 font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-sun/40" placeholder="000000"></div>
+          <button class="bg-red-50 text-danger font-medium rounded-lg px-4 py-2 text-sm hover:bg-red-100">Turn off</button>
+        </form>
+
+      {% elif setup_secret %}
+        <div class="grid sm:grid-cols-2 gap-6 items-start">
+          <div>
+            <p class="text-sm font-medium mb-2">1 &middot; Scan this with your app</p>
+            <div id="qr" class="inline-block p-3 bg-white border border-line rounded-lg"></div>
+            <p class="text-[12px] text-muted mt-3">Or enter this key manually:</p>
+            <code class="block mt-1 text-[12px] font-mono bg-surface border border-line rounded px-2 py-1 break-all">{{ setup_secret }}</code>
+          </div>
+          <div>
+            <p class="text-sm font-medium mb-2">2 &middot; Enter the 6-digit code</p>
+            <form method="post" action="{{ url_for('mfa_confirm') }}" class="space-y-3">
+              <input name="code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" required autofocus
+                     class="w-44 border border-line rounded-lg px-3 py-2.5 font-mono text-lg tracking-[.4em] text-center focus:outline-none focus:ring-2 focus:ring-sun/40" placeholder="000000">
+              <div class="flex gap-2 items-center">
+                <button class="bg-ink text-white font-medium rounded-lg px-5 py-2.5 text-sm hover:bg-inksoft transition">Verify &amp; enable</button>
+                <button form="cancel-mfa" class="text-muted text-sm px-3 hover:text-ink">Cancel</button>
+              </div>
+            </form>
+            <form id="cancel-mfa" method="post" action="{{ url_for('mfa_cancel') }}"></form>
+          </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <script>new QRCode(document.getElementById("qr"), {text: {{ otp_uri|tojson }}, width: 168, height: 168});</script>
+
+      {% else %}
+        <form method="post" action="{{ url_for('mfa_init') }}">
+          <button class="bg-ink text-white font-medium rounded-lg px-5 py-2.5 text-sm hover:bg-inksoft transition">Set up two-factor</button>
+        </form>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

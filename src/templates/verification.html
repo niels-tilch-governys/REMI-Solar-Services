@@ -1,0 +1,37 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Verification{% endblock %}
+{% block heading %}Verification queue{% endblock %}
+{% block subheading %}{{ tasks|length }} item(s) flagged for human review{% endblock %}
+{% block content %}
+<section class="space-y-3">
+  {% for t in tasks %}
+  <div class="bg-card border border-line rounded-xl p-5 flex items-start gap-4">
+    <span class="mt-1.5 w-2.5 h-2.5 rounded-full shrink-0 {{ 'bg-danger' if t.reason=='low_confidence' else 'bg-warn' }}"></span>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="badge {{ 'bg-red-50 text-danger' if t.reason=='low_confidence' else 'bg-amber-50 text-warn' }}">{{ t.reason.replace('_',' ') }}</span>
+        {{ m.category_badge(t.category) }}{{ m.priority_badge(t.priority) }}
+        <span class="text-[12px] text-muted ml-auto font-mono">conf {{ m.confidence(t.confidence) }}</span>
+      </div>
+      <a href="{{ url_for('email_detail', euid=t.email_uuid) }}" class="block font-medium mt-2 hover:text-panel truncate">{{ t.subject }}</a>
+      <p class="text-muted text-[12px] truncate">{{ t.sender_email }}</p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <form method="post" action="{{ url_for('verification_decision', task_id=t.id, decision='confirmed') }}">
+        <button class="text-[13px] font-medium px-3 py-1.5 rounded-lg bg-green-50 text-ok hover:bg-green-100">Confirm</button></form>
+      <form method="post" action="{{ url_for('verification_decision', task_id=t.id, decision='corrected') }}">
+        <button class="text-[13px] font-medium px-3 py-1.5 rounded-lg bg-amber-50 text-warn hover:bg-amber-100">Correct</button></form>
+      <form method="post" action="{{ url_for('verification_decision', task_id=t.id, decision='rejected') }}">
+        <button class="text-[13px] font-medium px-3 py-1.5 rounded-lg bg-slate-100 text-muted hover:bg-slate-200">Reject</button></form>
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-card border border-line rounded-xl p-12 text-center text-muted">
+    <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto mb-3 text-ok"></i>
+    Nothing to review. The queue is clear.
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}

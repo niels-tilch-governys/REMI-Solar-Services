@@ -1,0 +1,50 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% block title %}Data Retention{% endblock %}
+{% block heading %}Data retention &amp; deletion{% endblock %}
+{% block subheading %}GDPR retention policies and deletion evidence{% endblock %}
+{% block content %}
+<section class="bg-card border border-line rounded-xl overflow-hidden">
+  <div class="px-5 py-4 border-b border-line"><h2 class="font-display font-semibold text-[15px]">Retention policies</h2></div>
+  <table class="w-full text-sm">
+    <thead class="text-[11px] uppercase tracking-wide text-muted bg-surface/60">
+      <tr><th class="text-left font-semibold px-5 py-2.5">Data type</th><th class="text-left font-semibold py-2.5">Category</th>
+          <th class="text-left font-semibold py-2.5">Retention</th><th class="text-left font-semibold py-2.5">Action</th>
+          <th class="text-left font-semibold px-5 py-2.5">Notes</th></tr>
+    </thead>
+    <tbody class="divide-y divide-line">
+      {% for p in policies %}
+      <tr class="hover:bg-surface/60">
+        <td class="px-5 py-3 font-medium">{{ p.data_type }}</td>
+        <td class="py-3 text-muted">{{ p.category or 'all' }}</td>
+        <td class="py-3 font-mono">{{ (p.retention_days/365)|round(1) }} yr</td>
+        <td class="py-3"><span class="badge bg-blue-50 text-panel">{{ p.action }}</span></td>
+        <td class="px-5 py-3 text-muted">{{ p.description }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="bg-card border border-line rounded-xl overflow-hidden">
+  <div class="px-5 py-4 border-b border-line"><h2 class="font-display font-semibold text-[15px]">Deletion records</h2></div>
+  {% if deletions %}
+  <table class="w-full text-sm">
+    <thead class="text-[11px] uppercase tracking-wide text-muted bg-surface/60">
+      <tr><th class="text-left font-semibold px-5 py-2.5">Executed</th><th class="text-left font-semibold py-2.5">Type</th>
+          <th class="text-left font-semibold py-2.5">Scope</th><th class="text-left font-semibold py-2.5">Reason</th>
+          <th class="text-left font-semibold px-5 py-2.5">By</th></tr>
+    </thead>
+    <tbody class="divide-y divide-line">
+      {% for d in deletions %}
+      <tr><td class="px-5 py-3 font-mono text-[12px] text-muted">{{ d.executed_at or d.scheduled_at }}</td>
+        <td class="py-3">{{ d.type }}</td><td class="py-3 text-muted">{{ d.scope }}</td>
+        <td class="py-3 text-muted">{{ d.reason }}</td><td class="px-5 py-3">{{ d.who or 'system' }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="px-5 py-10 text-center text-muted">No deletions recorded yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

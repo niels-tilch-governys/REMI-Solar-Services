@@ -1,0 +1,18 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ code }} · REMI Solar Services</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{ink:'#0E1424',sun:'#F5A524',muted:'#6B7280'},fontFamily:{display:['"Space Grotesk"','sans-serif'],sans:['Inter','sans-serif']}}}}</script>
+</head>
+<body class="font-sans bg-ink text-white min-h-screen grid place-items-center">
+  <div class="text-center px-6">
+    <div class="font-display text-7xl font-bold text-sun">{{ code }}</div>
+    <p class="text-slate-300 mt-3 mb-6">{{ msg }}</p>
+    <a href="/" class="inline-block bg-sun text-ink font-medium rounded-lg px-5 py-2.5 text-sm">Back to home</a>
+  </div>
+</body>
+</html>

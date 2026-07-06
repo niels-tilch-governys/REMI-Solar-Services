@@ -1,0 +1,33 @@
+{# REMI Solar Services — AI Email Triage · Created by GOVERNYS (Niels Tilch — CTO) #}
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Reception Storage{% endblock %}
+{% block heading %}Mailbox reception storage{% endblock %}
+{% block subheading %}Raw incoming mail before / during classification{% endblock %}
+{% block content %}
+<section class="bg-card border border-line rounded-xl overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="text-[11px] uppercase tracking-wide text-muted bg-surface/60">
+      <tr><th class="text-left font-semibold px-5 py-2.5">Message ID</th><th class="text-left font-semibold py-2.5">Sender</th>
+          <th class="text-left font-semibold py-2.5">Subject</th><th class="text-left font-semibold py-2.5">Received</th>
+          <th class="text-center font-semibold py-2.5">Att.</th><th class="text-left font-semibold py-2.5">Status</th>
+          <th class="text-left font-semibold px-5 py-2.5">Storage ref</th></tr>
+    </thead>
+    <tbody class="divide-y divide-line">
+      {% for e in emails %}
+      <tr class="hover:bg-surface/60">
+        <td class="px-5 py-3 font-mono text-[12px] text-muted">{{ e.message_id }}</td>
+        <td class="py-3 font-medium truncate max-w-[140px]">{{ e.sender_email }}</td>
+        <td class="py-3 truncate max-w-[240px]">{{ e.subject }}</td>
+        <td class="py-3 text-muted font-mono text-[12px]">{{ e.received_at }}</td>
+        <td class="py-3 text-center font-mono">{{ e.n_att or '0' }}</td>
+        <td class="py-3">{{ m.status_badge(e.status) }}</td>
+        <td class="px-5 py-3 font-mono text-[12px] text-muted truncate max-w-[160px]">{{ e.storage_ref }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="px-5 py-10 text-center text-muted">Reception storage is empty.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
